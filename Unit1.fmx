@@ -1,0 +1,14 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'FMX SynEdit Test'
+  ClientHeight = 603
+  ClientWidth = 657
+  Position = ScreenCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
+  DesignerMasterStyle = 0
+end
