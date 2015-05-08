@@ -3,7 +3,9 @@ unit SynAdapter;
 interface
 
 uses
+{$IFDEF MSWINDOWS}
   System.Win.Registry,
+{$ENDIF}
   System.Types,
   System.UITypes,
   System.SysUtils;
@@ -21,8 +23,15 @@ const
   FillerChar = PrivateUseLow;
 
 type
+  TSynString = string;
+
   HKEY = Cardinal;
+{$IFDEF MSWINDOWS}
   TBetterRegistry = TRegistry;
+{$ELSE}
+  TBetterRegistry = class
+  end;
+{$ENDIF}
 
 const
   HKEY_LOCAL_MACHINE = 1; // dummy for now
@@ -31,6 +40,7 @@ const
 function StringToColor(const Str: string): TColor;
 function SynWideUpperCase(const value: string): string;
 function SynWideLowerCase(const value: string): string;
+function DeleteTypePrefixAndSynSuffix(S: string): string;
 
 implementation
 
@@ -48,5 +58,19 @@ function SynWideLowerCase(const value: string): string;
 begin
   result := value.ToLower;
 end;
+
+function DeleteTypePrefixAndSynSuffix(S: string): string;
+begin
+  Result := S;
+  if CharInSet(Result[1], ['T', 't']) then //ClassName is never empty so no AV possible
+    if Pos('tsyn', LowerCase(Result)) = 1 then
+      Delete(Result, 1, 4)
+    else
+      Delete(Result, 1, 1);
+
+  if Copy(LowerCase(Result), Length(Result) - 2, 3) = 'syn' then
+    SetLength(Result, Length(Result) - 3);
+end;
+
 
 end.

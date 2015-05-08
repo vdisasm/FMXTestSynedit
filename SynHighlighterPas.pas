@@ -148,8 +148,8 @@ type
     function FuncThreadvar(Index: Integer): TtkTokenKind;
     function FuncWrite(Index: Integer): TtkTokenKind;
     function FuncWriteonly(Index: Integer): TtkTokenKind;
-    function HashKey(Str: PWideChar): Cardinal;
-    function IdentKind(MayBe: PWideChar): TtkTokenKind;
+    function HashKey(const Str: string): Cardinal;
+    function IdentKind(const MayBe: string): TtkTokenKind;
     procedure InitIdent;
     procedure AddressOpProc;
     procedure AsciiCharProc;
@@ -270,21 +270,25 @@ const
 {$Q-}
 
 
-function TSynPasSyn.HashKey(Str: PWideChar): Cardinal;
+function TSynPasSyn.HashKey(const Str: string): Cardinal;
+var
+  i: integer;
 begin
   Result := 0;
-  while IsIdentChar(Str^) do
+  i := 0;
+  while IsIdentChar(Str.Chars[i]) do
   begin
-    Result := Result * 812 + Ord(Str^) * 76;
-    inc(Str);
+    Result := Result * 812 + Ord(Str.Chars[i]) * 76;
+    inc(i);
   end;
   Result := Result mod 389;
-  fStringLen := Str - fToIdent;
+//  fStringLen := Str - fToIdent;
+  fStringLen := i;
 end;
 {$Q+}
 
 
-function TSynPasSyn.IdentKind(MayBe: PWideChar): TtkTokenKind;
+function TSynPasSyn.IdentKind(const MayBe: string): TtkTokenKind;
 var
   Key: Cardinal;
 begin
@@ -726,7 +730,7 @@ procedure TSynPasSyn.AddressOpProc;
 begin
   fTokenID := tkSymbol;
   inc(Run);
-  if fLine[Run] = '@' then
+  if fLineStr.Chars[Run] = '@' then
     inc(Run);
 end;
 
@@ -734,7 +738,7 @@ procedure TSynPasSyn.AsciiCharProc;
 
   function IsAsciiChar: Boolean;
   begin
-    case fLine[Run] of
+    case fLineStr.Chars[Run] of
       '0' .. '9', '$', 'A' .. 'F', 'a' .. 'f':
         Result := True;
     else
@@ -751,7 +755,7 @@ end;
 
 procedure TSynPasSyn.BorProc;
 begin
-  case fLine[Run] of
+  case fLineStr.Chars[Run] of
     #0:
       NullProc;
     #10:
@@ -765,7 +769,7 @@ begin
       else
         fTokenID := tkComment;
       repeat
-        if fLine[Run] = '}' then
+        if fLineStr.Chars[Run] = '}' then
         begin
           inc(Run);
           if fRange in [rsBorAsm, rsDirectiveAsm] then
@@ -782,7 +786,7 @@ end;
 
 procedure TSynPasSyn.BraceOpenProc;
 begin
-  if (fLine[Run + 1] = '$') then
+  if (fLineStr.Chars[Run + 1] = '$') then
   begin
     if fRange = rsAsm then
       fRange := rsDirectiveAsm
@@ -803,7 +807,7 @@ procedure TSynPasSyn.ColonOrGreaterProc;
 begin
   fTokenID := tkSymbol;
   inc(Run);
-  if fLine[Run] = '=' then
+  if fLineStr.Chars[Run] = '=' then
     inc(Run);
 end;
 
@@ -811,15 +815,15 @@ procedure TSynPasSyn.CRProc;
 begin
   fTokenID := tkSpace;
   inc(Run);
-  if fLine[Run] = #10 then
+  if fLineStr.Chars[Run] = #10 then
     inc(Run);
 end;
 
 procedure TSynPasSyn.IdentProc;
 begin
-  fTokenID := IdentKind(fLine + Run);
+  fTokenID := IdentKind(fLineStr.Substring(Run));
   inc(Run, fStringLen);
-  while IsIdentChar(fLine[Run]) do
+  while IsIdentChar(fLineStr.Chars[Run]) do
     inc(Run);
 end;
 
@@ -827,7 +831,7 @@ procedure TSynPasSyn.IntegerProc;
 
   function IsIntegerChar: Boolean;
   begin
-    case fLine[Run] of
+    case fLineStr.Chars[Run] of
       '0' .. '9', 'A' .. 'F', 'a' .. 'f':
         Result := True;
     else
@@ -852,7 +856,7 @@ procedure TSynPasSyn.LowerProc;
 begin
   fTokenID := tkSymbol;
   inc(Run);
-  if (fLine[Run] = '=') or (fLine[Run] = '>') then
+  if (fLineStr.Chars[Run] = '=') or (fLineStr.Chars[Run] = '>') then
     inc(Run);
 end;
 
@@ -866,7 +870,7 @@ procedure TSynPasSyn.NumberProc;
 
   function IsNumberChar: Boolean;
   begin
-    case fLine[Run] of
+    case fLineStr.Chars[Run] of
       '0' .. '9', '.', 'e', 'E', '-', '+':
         Result := True;
     else
@@ -879,9 +883,9 @@ begin
   fTokenID := tkNumber;
   while IsNumberChar do
   begin
-    case fLine[Run] of
+    case fLineStr.Chars[Run] of
       '.':
-        if fLine[Run + 1] = '.' then
+        if fLineStr.Chars[Run + 1] = '.' then
           break
         else
           fTokenID := tkFloat;
@@ -891,7 +895,7 @@ begin
         begin
           if fTokenID <> tkFloat then // arithmetic
             break;
-          if (fLine[Run - 1] <> 'e') and (fLine[Run - 1] <> 'E') then
+          if (fLineStr.Chars[Run - 1] <> 'e') and (fLineStr.Chars[Run - 1] <> 'E') then
             break; // float, but it ends here
         end;
     end;
@@ -903,13 +907,13 @@ procedure TSynPasSyn.PointProc;
 begin
   fTokenID := tkSymbol;
   inc(Run);
-  if (fLine[Run] = '.') or (fLine[Run - 1] = ')') then
+  if (fLineStr.Chars[Run] = '.') or (fLineStr.Chars[Run - 1] = ')') then
     inc(Run);
 end;
 
 procedure TSynPasSyn.AnsiProc;
 begin
-  case fLine[Run] of
+  case fLineStr.Chars[Run] of
     #0:
       NullProc;
     #10:
@@ -919,7 +923,7 @@ begin
   else
     fTokenID := tkComment;
     repeat
-      if (fLine[Run] = '*') and (fLine[Run + 1] = ')') then
+      if (fLineStr.Chars[Run] = '*') and (fLineStr.Chars[Run + 1] = ')') then
       begin
         inc(Run, 2);
         if fRange = rsAnsiAsm then
@@ -936,7 +940,7 @@ end;
 procedure TSynPasSyn.RoundOpenProc;
 begin
   inc(Run);
-  case fLine[Run] of
+  case fLineStr.Chars[Run] of
     '*':
       begin
         inc(Run);
@@ -969,7 +973,7 @@ end;
 procedure TSynPasSyn.SlashProc;
 begin
   inc(Run);
-  if (fLine[Run] = '/') and (fDelphiVersion > dvDelphi1) then
+  if (fLineStr.Chars[Run] = '/') and (fDelphiVersion > dvDelphi1) then
   begin
     fTokenID := tkComment;
     repeat
@@ -984,7 +988,7 @@ procedure TSynPasSyn.SpaceProc;
 begin
   inc(Run);
   fTokenID := tkSpace;
-  while (fLine[Run] <= #32) and not IsLineEnd(Run) do
+  while (fLineStr.Chars[Run] <= #32) and not IsLineEnd(Run) do
     inc(Run);
 end;
 
@@ -994,10 +998,10 @@ begin
   inc(Run);
   while not IsLineEnd(Run) do
   begin
-    if fLine[Run] = #39 then
+    if fLineStr.Chars[Run] = #39 then
     begin
       inc(Run);
-      if fLine[Run] <> #39 then
+      if fLineStr.Chars[Run] <> #39 then
         break;
     end;
     inc(Run);
@@ -1026,7 +1030,7 @@ begin
     rsBor, rsBorAsm, rsDirective, rsDirectiveAsm:
       BorProc;
   else
-    case fLine[Run] of
+    case fLineStr.Chars[Run] of
       #0:
         NullProc;
       #10:
@@ -1049,7 +1053,7 @@ begin
         BraceOpenProc;
       '}', '!', '"', '%', '&', '(' .. '/', ':' .. '@', '[' .. '^', '`', '~':
         begin
-          case fLine[Run] of
+          case fLineStr.Chars[Run] of
             '(':
               RoundOpenProc;
             '.':
@@ -1168,10 +1172,11 @@ end;
 procedure TSynPasSyn.EnumUserSettings(DelphiVersions: TStrings);
 
   procedure LoadKeyVersions(const Key, Prefix: string);
-  var
-    Versions: TStringList;
-    i: Integer;
+//  var
+//    Versions: TStringList;
+//    i: Integer;
   begin
+    {
     with TBetterRegistry.Create do
     begin
       try
@@ -1195,6 +1200,7 @@ procedure TSynPasSyn.EnumUserSettings(DelphiVersions: TStrings);
         Free;
       end;
     end;
+    }
   end;
 
 begin

@@ -1,6 +1,8 @@
 program FMXTestSynedit;
 
+{$IFDEF MSWINDOWS}
 {$APPTYPE CONSOLE}
+{$ENDIF}
 
 
 uses

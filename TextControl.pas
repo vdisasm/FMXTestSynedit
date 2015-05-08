@@ -59,7 +59,16 @@ implementation
 
 const
   DEFAULT_SCROLL_STEP = 3;
-  DEFAULT_FONT_NAME   = 'Consolas';
+
+{$IF DEFINED(MSWINDOWS)}
+  DEFAULT_FONT_NAME = 'Consolas';
+  DEFAULT_FONT_SIZE = 16;
+{$ELSE IF DEFINED(ANDROID)}
+  DEFAULT_FONT_NAME = 'Droid Sans Mono';
+  DEFAULT_FONT_SIZE = 24;
+{$ELSE MESSAGE FATAL 'NO FONT INFO'}
+{$ENDIF}
+
 
 constructor TVirtualTextControl.Create(AOwner: TComponent);
 begin
@@ -191,7 +200,7 @@ begin
   Rect := LocalRect;
 
   Canvas.Font.Family := DEFAULT_FONT_NAME;
-  Canvas.Font.Size := 16;
+  Canvas.Font.Size := DEFAULT_FONT_SIZE;
 
   // Clear text area.
   Canvas.Fill.Color := FBackgroundColor;

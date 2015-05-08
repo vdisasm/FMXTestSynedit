@@ -36,14 +36,6 @@ unit SynEditHighlighter;
 interface
 
 uses
-{$IFDEF SYN_CLX}
-  kTextDrawer,
-  Types,
-  QGraphics,
-  QSynEditTypes,
-  QSynEditMiscClasses,
-  QSynUnicode,
-{$ELSE}
   // Graphics,
   // Windows,
   // Registry,
@@ -53,7 +45,7 @@ uses
   // SynUnicode,
   System.Types,
   System.UITypes,
-{$ENDIF}
+
   SysUtils,
   Classes,
   SynEditHighlighterOptions,
@@ -143,20 +135,23 @@ type
     procedure SetAdditionalIdentChars(const Value: TSysCharSet);
     procedure SetAdditionalWordBreakChars(const Value: TSysCharSet);
   protected
-    fCasedLine: PWideChar;
+//    fCasedLine: PWideChar;
     fCasedLineStr: UnicodeString;
     fCaseSensitive: Boolean;
     fDefaultFilter: string;
-    fExpandedLine: PWideChar;
+//    fExpandedLine: PWideChar;
     fExpandedLineLen: Integer;
     fExpandedLineStr: UnicodeString;
     fExpandedTokenPos: Integer;
-    fLine: PWideChar;
+//    fLine: PWideChar;
     fLineLen: Integer;
     fLineStr: UnicodeString;
     fLineNumber: Integer;
     fStringLen: Integer;
-    fToIdent: PWideChar;
+  protected
+//    __fToIdent: PWideChar;
+    fToIdent: string;
+  protected
     fTokenPos: Integer;
     fUpdateChange: Boolean;
     Run: Integer;
@@ -280,15 +275,11 @@ function GetPlaceableHighlighters: TSynHighlighterList;
 implementation
 
 uses
-  SynEditMiscProcs,
+//  SynEditMiscProcs,
 {$IFDEF UNICODE}
-  WideStrUtils,
+//  WideStrUtils,
 {$ENDIF}
-{$IFDEF SYN_CLX}
-  QSynEditStrConst;
-{$ELSE}
 SynEditStrConst;
-{$ENDIF}
 
 {$IFNDEF SYN_CPPB_1}
 
@@ -530,6 +521,7 @@ const
 
   begin { LoadOldStyle }
     Result := False;
+    {
     try
       Reg := TBetterRegistry.Create;
       Reg.RootKey := RootKey;
@@ -576,6 +568,7 @@ const
       end;
     except
     end;
+    }
   end; { LoadOldStyle }
 
   function LoadNewStyle(RootKey: HKEY; AttrKey, AttrName: string): Boolean;
@@ -596,6 +589,7 @@ const
 
   begin
     Result := False;
+    {
     try
       Reg := TBetterRegistry.Create;
       Reg.RootKey := RootKey;
@@ -672,6 +666,7 @@ const
       end;
     except
     end;
+    }
   end; { LoadNewStyle }
 
 begin
@@ -727,6 +722,8 @@ function TSynHighlighterAttributes.LoadFromRegistry(Reg: TBetterRegistry): Boole
 var
   Key: string;
 begin
+  Exit(false);
+  {
   Key := Reg.CurrentPath;
   if Reg.OpenKeyReadOnly(Name) then
   begin
@@ -741,12 +738,15 @@ begin
   end
   else
     Result := False;
+  }
 end;
 
 function TSynHighlighterAttributes.SaveToRegistry(Reg: TBetterRegistry): Boolean;
 var
   Key: string;
 begin
+  Exit(False);
+  {
   Key := Reg.CurrentPath;
   if Reg.OpenKey(Name, True) then
   begin
@@ -758,6 +758,7 @@ begin
   end
   else
     Result := False;
+  }
 end;
 
 function TSynHighlighterAttributes.LoadFromFile(Ini: TIniFile): Boolean;
@@ -930,6 +931,8 @@ var
   r: TBetterRegistry;
   i: Integer;
 begin
+  Exit(false);
+  {
   r := TBetterRegistry.Create;
   try
     r.RootKey := RootKey;
@@ -944,6 +947,7 @@ begin
   finally
     r.Free;
   end;
+  }
 end;
 
 function TSynCustomHighlighter.SaveToRegistry(RootKey: HKEY;
@@ -952,6 +956,8 @@ var
   r: TBetterRegistry;
   i: Integer;
 begin
+  Exit(false);
+  {
   r := TBetterRegistry.Create;
   try
     r.RootKey := RootKey;
@@ -966,6 +972,7 @@ begin
   finally
     r.Free;
   end;
+  }
 end;
 
 function TSynCustomHighlighter.LoadFromFile(AFileName: String): Boolean;
@@ -1061,7 +1068,8 @@ end;
 
 function TSynCustomHighlighter.GetExpandedTokenPos: Integer;
 begin
-  if fExpandedLine = nil then
+//  if fExpandedLine = nil then
+  if fExpandedLineStr.IsEmpty then
     Result := fTokenPos
   else
     Result := fExpandedTokenPos;
@@ -1070,7 +1078,7 @@ end;
 function TSynCustomHighlighter.GetExportName: string;
 begin
   if FExportName = '' then
-    FExportName := SynEditMiscProcs.DeleteTypePrefixAndSynSuffix(ClassName);
+    FExportName := DeleteTypePrefixAndSynSuffix(ClassName);
   Result := FExportName;
 end;
 
@@ -1078,16 +1086,16 @@ function TSynCustomHighlighter.GetExpandedToken: UnicodeString;
 var
   Len: Integer;
 begin
-  if fExpandedLine = nil then
-  begin
-    Result := GetToken;
-    Exit;
-  end;
+//  if fExpandedLine = nil then
+  if fExpandedLineStr.IsEmpty then
+    Exit(GetToken);
 
   Len := ExpandedRun - fExpandedTokenPos;
-  SetLength(Result, Len);
-  if Len > 0 then
-    WStrLCopy(@Result[1], fExpandedLine + fExpandedTokenPos, Len);
+//  SetLength(Result, Len);
+//  if Len > 0 then
+//    WStrLCopy(@Result[1], fExpandedLine + fExpandedTokenPos, Len);
+
+  result := fExpandedLineStr.Substring(fExpandedTokenPos, len);
 end;
 
 class function TSynCustomHighlighter.GetFriendlyLanguageName: UnicodeString;
@@ -1126,9 +1134,10 @@ var
   Len: Integer;
 begin
   Len := Run - fTokenPos;
-  SetLength(Result, Len);
-  if Len > 0 then
-    WStrLCopy(@Result[1], fCasedLine + fTokenPos, Len);
+//  SetLength(Result, Len);
+//  if Len > 0 then
+//    WStrLCopy(@Result[1], fCasedLine + fTokenPos, Len);
+  result := fCasedLineStr.Substring(fTokenPos, len);
 end;
 
 function TSynCustomHighlighter.GetTokenPos: Integer;
@@ -1152,26 +1161,28 @@ begin
 end;
 
 function TSynCustomHighlighter.IsCurrentToken(const Token: UnicodeString): Boolean;
-var
-  i: Integer;
-  Temp: PWideChar;
+//var
+//  i: Integer;
+//  Temp: PWideChar;
 begin
-  Temp := fToIdent;
-  if Length(Token) = fStringLen then
-  begin
-    Result := True;
-    for i := 1 to fStringLen do
-    begin
-      if Temp^ <> Token[i] then
-      begin
-        Result := False;
-        break;
-      end;
-      Inc(Temp);
-    end;
-  end
-  else
-    Result := False;
+//  Temp := fToIdent;
+//  if Length(Token) = fStringLen then
+//  begin
+//    Result := True;
+//    for i := 1 to fStringLen do
+//    begin
+//      if Temp^ <> Token[i] then
+//      begin
+//        Result := False;
+//        break;
+//      end;
+//      Inc(Temp);
+//    end;
+//  end
+//  else
+//    Result := False;
+
+  Result := fToIdent.StartsWith(token);
 end;
 
 function TSynCustomHighlighter.IsFilterStored: Boolean;
@@ -1196,7 +1207,8 @@ end;
 
 function TSynCustomHighlighter.IsLineEnd(Run: Integer): Boolean;
 begin
-  Result := (Run >= fLineLen) or (fLine[Run] = #10) or (fLine[Run] = #13);
+//  Result := (Run >= fLineLen) or (fLine[Run] = #10) or (fLine[Run] = #13);
+  Result := (Run >= fLineLen) or (fLineStr.Chars[Run] = #10) or (fLineStr.Chars[Run] = #13);
 end;
 
 function TSynCustomHighlighter.IsWhiteChar(AChar: WideChar): Boolean;
@@ -1229,13 +1241,15 @@ begin
     Exit;
 
   fExpandedTokenPos := ExpandedRun;
-  if fExpandedLine = nil then
+//  if fExpandedLine = nil then
+//    Exit;
+  if fExpandedLineStr.IsEmpty then
     Exit;
 
   Delta := Run - fOldRun;
   while Delta > 0 do
   begin
-    while fExpandedLine[ExpandedRun] = FillerChar do
+    while fExpandedLineStr.Chars[ExpandedRun] = FillerChar do
       Inc(ExpandedRun);
     Inc(ExpandedRun);
     Dec(Delta);
@@ -1285,7 +1299,7 @@ procedure TSynCustomHighlighter.SetLineExpandedAtWideGlyphs(const Line,
   ExpandedLine: UnicodeString; LineNumber: Integer);
 begin
   fExpandedLineStr := ExpandedLine;
-  fExpandedLine := PWideChar(fExpandedLineStr);
+//  fExpandedLine := PWideChar(fExpandedLineStr);
   fExpandedLineLen := Length(fExpandedLineStr);
   DoSetLine(Line, LineNumber);
   Next;
@@ -1294,7 +1308,7 @@ end;
 procedure TSynCustomHighlighter.SetLine(const Value: UnicodeString; LineNumber: Integer);
 begin
   fExpandedLineStr := '';
-  fExpandedLine := nil;
+//  fExpandedLine := nil;
   fExpandedLineLen := 0;
   DoSetLine(Value, LineNumber);
   Next;
@@ -1315,15 +1329,15 @@ begin
   begin
     fLineStr := Value;
     fCasedLineStr := '';
-    fCasedLine := PWideChar(fLineStr);
+//    fCasedLine := PWideChar(fLineStr);
   end
   else
   begin
     DoWideLowerCase(Value, fLineStr);
     fCasedLineStr := Value;
-    fCasedLine := PWideChar(fCasedLineStr);
+//    fCasedLine := PWideChar(fCasedLineStr);
   end;
-  fLine := PWideChar(fLineStr);
+//  fLine := PWideChar(fLineStr);
   fLineLen := Length(fLineStr);
 
   Run := 0;
@@ -1371,7 +1385,7 @@ function TSynCustomHighlighter.PosToExpandedPos(Pos: Integer): Integer;
 var
   i: Integer;
 begin
-  if fExpandedLine = nil then
+  if fExpandedLineStr.IsEmpty then
   begin
     Result := Pos;
     Exit;
@@ -1381,7 +1395,7 @@ begin
   i := 0;
   while i < Pos do
   begin
-    while fExpandedLine[Result] = FillerChar do
+    while fExpandedLineStr.Chars[Result] = FillerChar do
       Inc(Result);
     Inc(Result);
     Inc(i);

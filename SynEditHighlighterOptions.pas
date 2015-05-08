@@ -33,18 +33,19 @@ unit SynEditHighlighterOptions;
 interface
 
 uses
-  Classes;
+  Classes,
+  SynAdapter;
 
 type
   TSynEditHighlighterOptions = class(TPersistent)
   private
     FAutoDetectEnabled: Boolean;
     FAutoDetectLineLimit: Cardinal;
-    FAutoDetectMatchExpression: WideString;
-    FDefaultExtension: WideString;
-    FLineCommentarEnd: WideString;
-    FLineCommentarStart: WideString;
-    FTitle: WideString;
+    FAutoDetectMatchExpression: TSynString;
+    FDefaultExtension: TSynString;
+    FLineCommentarEnd: TSynString;
+    FLineCommentarStart: TSynString;
+    FTitle: TSynString;
     FVisible: Boolean;
   public
     procedure Assign(Source: TPersistent); override;
@@ -52,11 +53,11 @@ type
   published
     property AutoDetectEnabled: Boolean read FAutoDetectEnabled write FAutoDetectEnabled;
     property AutoDetectLineLimit: Cardinal read FAutoDetectLineLimit write FAutoDetectLineLimit;
-    property AutoDetectMatchExpression: WideString read FAutoDetectMatchExpression write FAutoDetectMatchExpression;
-    property DefaultExtension: WideString read FDefaultExtension write FDefaultExtension;
-    property LineCommentarEnd: WideString read FLineCommentarEnd write FLineCommentarEnd;
-    property LineCommentarStart: WideString read FLineCommentarStart write FLineCommentarStart;
-    property Title: WideString read FTitle write FTitle;
+    property AutoDetectMatchExpression: TSynString read FAutoDetectMatchExpression write FAutoDetectMatchExpression;
+    property DefaultExtension: TSynString read FDefaultExtension write FDefaultExtension;
+    property LineCommentarEnd: TSynString read FLineCommentarEnd write FLineCommentarEnd;
+    property LineCommentarStart: TSynString read FLineCommentarStart write FLineCommentarStart;
+    property Title: TSynString read FTitle write FTitle;
     property Visible: Boolean read FVisible write FVisible;
   end;
 

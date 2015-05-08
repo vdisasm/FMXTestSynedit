@@ -56,7 +56,17 @@ begin
     hlPas.SetDelphiColors;
     tc.Highlighter := hlPas;
 
-    tc.lines.Text := hlPas.SampleSource;
+    // Add enough strings for scrolling
+    tc.lines.Text :=
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource + sLineBreak +
+      hlPas.SampleSource
   end;
 end;
 
